@@ -33,6 +33,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```powershell
 python src\data_acquisition.py
 python src\eda.py
+python src\ preprocessing.py
 python src\train.py
 ```
 
@@ -66,6 +67,11 @@ curl.exe -X POST http://localhost:8000/predict `
   -d "@sample_input.json"
 ```
 
+Swagger UI: http://localhost:8000/docs 
+Health Endpoint: http://localhost:8000/health 
+Metrics Endpoint: http://localhost:8000/metrics
+
+
 ## Docker
 
 ```powershell
@@ -73,15 +79,19 @@ docker build -t heart-disease-api .
 docker run -p 8000:8000 heart-disease-api
 ```
 
+Open: http://localhost:8000/metrics
+
 ## Kubernetes
 
 ```powershell
-minikube start
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl get nodes
+Build Docker Image: docker build -t heart-disease-api:latest .
+docker images
+kubectl apply -f k8s\deployment.yaml
+kubectl apply -f k8s\service.yaml
 kubectl get pods
 kubectl get svc
-minikube service heart-disease-service --url
+kubectl port-forward service/heart-disease-service 8000:80
 ```
 
 ## Monitoring
@@ -89,71 +99,14 @@ minikube service heart-disease-service --url
 With the API running, open:
 
 ```text
-http://localhost:8000/metrics
+docker run -d   --name prometheus   -p 9090:9090   prom/prometheus
+docker run -d --name prometheus -p 9090:9090 prom/Prometheus
+docker run -d   --name grafana   -p 3000:3000   grafana/Grafana
 ```
-## commands
+Open: http://localhost:8000/metrics
 
-python -m venv mlops 
-.\mlops\Scripts\Activate.ps1 
-python -m pip install --upgrade pip setuptools wheel 
-pip install --prefer-binary -r requirements.txt 
+Prometheus UI: http://localhost:9090
+http://localhost:9090/targets
 
-Main pipeline :
-cd C:\Praveen\AI\Bits\sem3\api\MLOPS\heart-disease-mlops-assignment 
-.\mlops\Scripts\Activate.ps1 
-python src\data_acquisition.py 
-python src\eda.py 
-python src\train.py 
-pytest -q 
-
-MLflow :
-mlflow ui --backend-store-uri sqlite:///mlflow.db 
-
-FastAPI :
-uvicorn api.main:app --reload --host 0.0.0.0 --port 8000 
-
-Prediction test :
-curl.exe -X POST http://localhost:8000/predict ` -H "Content-Type: application/json" ` -d "@sample_input.json" 
-
-Docker and Kubernetes :
-docker build -t heart-disease-api . 
-docker run -p 8000:8000 heart-disease-api 
-
-Using minikube
-minikube start 
-kubectl apply -f k8s/deployment.yaml 
-kubectl apply -f k8s/service.yaml 
-kubectl get pods 
-kubectl get svc
-
-Using docker kubernetes
-Verify Kubernetes: kubectl get nodes
-Build Docker Image: docker build -t heart-disease-api:latest .
-Verify image:docker images
-Apply deployment: kubectl apply -f k8s\deployment.yaml
-Apply service: kubectl apply -f k8s\service.yaml
-Check pods: kubectl get pods
-Check services: kubectl get svc
-Access API: kubectl port-forward service/heart-disease-service 8000:80
-Open: http://localhost:8000/docs
-
-
-prometheus: docker run -d --name prometheus -p 9090:9090 prom/prometheus
-http://localhost:9090
-
-
-mONITORING
-http://localhost:8000/metrics
-Create Prometheus container: docker run -d   --name prometheus   -p 9090:9090   prom/prometheus
-docker run -d --name prometheus -p 9090:9090 prom/prometheus
-http://localhost:9090
-Configure Prometheus: monitoring/prometheus.yml
-Verify Metrics: http://localhost:9090/targets
-
-Graphana:
-Run Grafana:docker run -d   --name grafana   -p 3000:3000   grafana/grafana
-http://localhost:3000
+Graphana UI: http://localhost:3000
 http://host.docker.internal:9090
-monitoring/grafana/dashboard.json
-Dashboards → Import
-
