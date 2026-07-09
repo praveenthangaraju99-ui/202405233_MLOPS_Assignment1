@@ -1,0 +1,17 @@
+flowchart LR
+    A[UCI Heart Disease Dataset] --> B[Download and Cleaning]
+    B --> C[EDA Plots]
+    B --> D[Sklearn Preprocessing Pipeline]
+    D --> E[Logistic Regression]
+    D --> F[Random Forest]
+    E --> G[MLflow Tracking]
+    F --> G
+    G --> H[Best Joblib Model]
+    H --> I[FastAPI Prediction Service]
+    I --> J[Docker Image]
+    J --> K[Kubernetes Deployment]
+    I --> L[Prometheus Metrics]
+    L --> M[Grafana Dashboard]
+    N[GitHub Actions] --> B
+    N --> E
+    N --> F

@@ -1,0 +1,37 @@
+name: heart-disease-mlops-ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test-train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install --prefer-binary -r requirements.txt
+      - name: Lint
+        run: flake8 src api tests --max-line-length=120
+      - name: Unit tests
+        run: pytest -q
+      - name: Training smoke run
+        run: |
+          python src/data_acquisition.py
+          python src/eda.py
+          python src/train.py
+      - name: Upload outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: heart-disease-mlops-artifacts
+          path: |
+            models/
+            docs/figures/
+            mlflow.db

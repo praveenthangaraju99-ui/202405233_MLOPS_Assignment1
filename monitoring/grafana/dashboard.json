@@ -1,0 +1,34 @@
+{
+  "title": "Heart Disease API Monitoring",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "API Requests",
+      "targets": [
+        {
+          "expr": "rate(heart_api_requests_total[1m])"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Prediction Counts",
+      "targets": [
+        {
+          "expr": "heart_api_predictions_total"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Average Latency",
+      "targets": [
+        {
+          "expr": "rate(heart_api_request_latency_seconds_sum[1m]) / rate(heart_api_request_latency_seconds_count[1m])"
+        }
+      ]
+    }
+  ]
+}

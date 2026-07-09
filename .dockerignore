@@ -1,0 +1,10 @@
+.git
+mlops
+.venv
+__pycache__
+.pytest_cache
+*.pyc
+mlflow.db
+models/*.joblib
+models/metrics.json
+models/artifacts
