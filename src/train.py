@@ -60,35 +60,43 @@ def train_models(df):
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
     candidates = {
         "logistic_regression": (
-            LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-            {"model__C": [0.1, 1.0, 10.0], "model__class_weight": [None, "balanced"]},
-        ),
-        "random_forest": (
-            RandomForestClassifier(random_state=RANDOM_STATE),
-            {
-                "model__n_estimators": [100, 300],
-                "model__max_depth": [None, 4, 8],
-                "model__min_samples_split": [2, 5],
-            },
-        ),
-    }
+            LogisticRegression(
+                max_iter=1000, random_state=RANDOM_STATE), {
+                "model__C": [
+                    0.1, 1.0, 10.0], "model__class_weight": [
+                        None, "balanced"]}, ), "random_forest": (
+                            RandomForestClassifier(
+                                random_state=RANDOM_STATE), {
+                                    "model__n_estimators": [
+                                        100, 300], "model__max_depth": [
+                                            None, 4, 8], "model__min_samples_split": [
+                                                2, 5], }, ), }
 
-    # SQLite is used because it is stable on Windows and works with current MLflow versions.
+    # SQLite is used because it is stable on Windows and works with current
+    # MLflow versions.
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("heart-disease-classification")
 
     results = []
     best = None
     for name, (estimator, param_grid) in candidates.items():
-        pipe = Pipeline([("preprocessor", build_preprocessor()), ("model", estimator)])
-        grid = GridSearchCV(pipe, param_grid=param_grid, scoring="roc_auc", cv=cv, n_jobs=-1, refit=True)
+        pipe = Pipeline(
+            [("preprocessor", build_preprocessor()), ("model", estimator)])
+        grid = GridSearchCV(
+            pipe,
+            param_grid=param_grid,
+            scoring="roc_auc",
+            cv=cv,
+            n_jobs=-1,
+            refit=True)
 
         with mlflow.start_run(run_name=name):
             print(f"Training {name}...")
             grid.fit(X_train, y_train)
             metrics = evaluate(grid.best_estimator_, X_test, y_test)
             artifact_dir = MODELS_DIR / "artifacts" / name
-            roc_path, cm_path = plot_artifacts(grid.best_estimator_, X_test, y_test, artifact_dir)
+            roc_path, cm_path = plot_artifacts(
+                grid.best_estimator_, X_test, y_test, artifact_dir)
 
             mlflow.log_params(grid.best_params_)
             mlflow.log_metric("cv_best_roc_auc", float(grid.best_score_))
@@ -103,7 +111,12 @@ def train_models(df):
             joblib.dump(grid.best_estimator_, model_path)
             mlflow.log_artifact(str(model_path))
 
-            result = {"model_name": name, "best_params": grid.best_params_, "cv_roc_auc": float(grid.best_score_), **metrics}
+            result = {
+                "model_name": name,
+                "best_params": grid.best_params_,
+                "cv_roc_auc": float(
+                    grid.best_score_),
+                **metrics}
             results.append(result)
             if best is None or result["roc_auc"] > best["roc_auc"]:
                 best = {**result, "estimator": grid.best_estimator_}
